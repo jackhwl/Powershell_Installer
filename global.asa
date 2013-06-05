@@ -1,0 +1,26 @@
+﻿<script language="vbscript" runat="server">
+
+Sub Application_OnStart
+    Application("CompanyID")=0
+End Sub
+
+Sub Application_OnEnd
+End Sub
+
+Sub Session_OnStart
+	Application("RootName")=Mid(Request.ServerVariables("APPL_MD_PATH"),Len(Request.ServerVariables("INSTANCE_META_PATH")+"/Root")+1)
+	Set Session("UserInfo")=Nothing
+    Set Session("ASPGrids") = CreateObject("Scripting.Dictionary")
+    Set Session("Criteria") = CreateObject("Scripting.Dictionary")
+    Session("Criteria").Add "P", CreateObject("Scripting.Dictionary")
+    Session("Criteria").Add "V", CreateObject("Scripting.Dictionary")
+    Session("Criteria").Add "F", CreateObject("Scripting.Dictionary")
+    Set Session("GV") = CreateObject("Scripting.Dictionary")
+    Session("GV").Add "Info",Nothing
+End Sub
+
+Sub Session_OnEnd
+    Session.Contents.RemoveAll()
+    Session.Abandon()
+End Sub
+</script>

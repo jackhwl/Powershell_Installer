@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<configuration>
+	<Version>
+		<DeployScriptVersion>1.0.0.0</DeployScriptVersion>		
+		<Product2Test>ECM 7.2.0</Product2Test>		
+	</Version>	
+	<DeployServer>
+		<servername>RsAutoTest</servername>	
+		<databaseservername>RsAutoTest</databaseservername>
+		<databasename>TempDB</databasename>
+		<databaseusername>admin</databaseusername>
+		<databasepassword>adminski</databasepassword>
+		<DEPLOY_FOLDER>\\RsAutoTest\ECM72AutoTest</DEPLOY_FOLDER>		
+	</DeployServer>
+	<Deploy type="file">
+		<File action="delete" wait="2" Name="DEPLOY_FOLDER\lib\*"></File>
+    <File action="delete" wait="2" Name="DEPLOY_FOLDER\web\*"></File>
+    <File action="delete" wait="2" Name="DEPLOY_FOLDER\DB\db\*"></File>
+    <File action="delete" wait="2" Name="DEPLOY_FOLDER\db\script\*"></File>
+    <File action="delete" wait="2" Name="DEPLOY_FOLDER\Document\*"></File>
+	</Deploy>
+	<Deploy type="file">
+    <File action="copy"   wait="2" From="TFS_BINARY_FOLDER\*" To="DEPLOY_FOLDER\lib"></File>
+    <File action="copy"   wait="2" From="TFS_SOURCE_FOLDER\Asp\*" To="DEPLOY_FOLDER\web"></File>
+    <File action="copy"   wait="2" From="TFS_DB_FOLDER\*" To="DEPLOY_FOLDER\DB\db"></File>
+    <File action="copy"   wait="2" From="TFS_DB_SCRIPT_FOLDER\*" To="DEPLOY_FOLDER\db\script"></File>
+    <File action="copy"   wait="2" From="TFS_SOURCE_FOLDER\Document\*" To="DEPLOY_FOLDER\Document"></File>
+  </Deploy>
+  <Deploy type="file">
+	  <File action="delete" wait="2" Name="DEPLOY_FOLDER\lib\*.pdb"></File>
+  </Deploy>
+</configuration>

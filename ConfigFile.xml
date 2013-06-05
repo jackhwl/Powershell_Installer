@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<configuration>
+	<Version>
+		<DeployScriptVersion>1.0.0.0</DeployScriptVersion>		
+		<Product2Test>ECM 7.2.0</Product2Test>		
+	</Version>	
+	<DeployServer>
+		<servername>RVJACKH</servername>	
+		<databaseservername>RVJACKH</databaseservername>
+		<databasename>TempDB</databasename>
+		<databaseusername>admin</databaseusername>
+		<databasepassword>adminski</databasepassword>
+		<DEPLOY_FOLDER>\\RVJACKH\installer\PowerShell\Publish\SiteMini</DEPLOY_FOLDER>		
+		
+		<DB_Server serverName="REdev" dbName="Doxim7" userId="admin" password="adminski" />
+		<IIS_Server name="RVJACKH">
+			<!-- CoreSite host: Admin, Common, Web -->
+			<CoreSite applicationName="dxm0" path="D:\Jack\DoximEcm\DoximEcm6\Core\Asp\" />
+			<WebSite siteName="Default Web Site" applicationName="Doxim72" applicationPool="DoximEDoc72" applicationPoolIdentityDomain="Research" 
+					applicationPoolIdentity="ECMService" applicationPoolIdentityPwd="horton" 
+					path="\\RVJACKH\installer\PowerShell\Website2" />
+			<WebSite siteName="Default Web Site" applicationName="Doxim73" applicationPool="DoximEDoc72" applicationPoolIdentityDomain="Research" 
+					applicationPoolIdentity="ECMService" applicationPoolIdentityPwd="horton" 
+					path="\\RVJACKH\installer\PowerShell\Website3" />
+		</IIS_Server>
+	</DeployServer>
+	<Deploy type="website">
+		<CoreSite exists="true" applicationName="dxm0" path="D:\Jack\DoximEcm\DoximEcm6\Core\Asp\" />
+		<WebSite siteName="Default Web Site" applicationName="Doxim25" applicationPool="DoximEDoc25" applicationPoolIdentityDomain="Research" 
+				applicationPoolIdentity="ECMService" applicationPoolIdentityPwd="horton" 
+				path="\\RVJACKH\installer\PowerShell\Website2" />
+	</Deploy>
+	<!--Deploy type="website">
+		<CoreSite applicationName="dxm0" path="D:\Jack\DoximEcm\DoximEcm6\Core\Asp\" />
+		<WebSite siteName="Default Web Site" applicationName="Doxim73" applicationPool="DoximEDoc72" applicationPoolIdentityDomain="Research" 
+				applicationPoolIdentity="ECMService" applicationPoolIdentityPwd="horton" 
+				path="\\RVJACKH\installer\PowerShell\Website3" />
+	</Deploy-->
+	<!--Deploy type="file">
+		<File action="delete" wait="2" Name="DEPLOY_FOLDER\lib\*"></File>
+		<File action="delete" wait="2" Name="DEPLOY_FOLDER\web\*"></File>
+		<File action="delete" wait="2" Name="DEPLOY_FOLDER\DB\db\*"></File>
+		<File action="delete" wait="2" Name="DEPLOY_FOLDER\db\script\*"></File>
+		<File action="delete" wait="2" Name="DEPLOY_FOLDER\Document\*"></File>
+	</Deploy>
+	<Deploy type="file">
+		<File action="copy"   wait="2" From="TFS_BINARY_FOLDER\*" To="DEPLOY_FOLDER\lib"></File>    
+		<File action="copy"   wait="2" From="TFS_DEPLOY_SCRIPT_FOLDER\RegisterCom.bat" To="DEPLOY_FOLDER\lib"></File>
+		<File action="copy"   wait="2" From="TFS_SOURCE_FOLDER\Asp\*" To="DEPLOY_FOLDER\web"></File>
+		<File action="copy"   wait="2" From="TFS_DB_FOLDER\*" To="DEPLOY_FOLDER\DB\db"></File>
+		<File action="copy"   wait="2" From="TFS_DB_SCRIPT_FOLDER\*" To="DEPLOY_FOLDER\db\script"></File>
+		<File action="copy"   wait="2" From="TFS_SOURCE_FOLDER\Document\*" To="DEPLOY_FOLDER\Document"></File>
+	</Deploy>
+	<Deploy type="file">
+		<File action="delete" wait="2" Name="DEPLOY_FOLDER\lib\*.pdb"></File>
+	</Deploy-->
+  <!-- http:// RsAutoTest /ECM72 -->
+  <Deploy type="file">    
+    <!--File action="delete"   wait="2" Name="INSTALL_FOLDER"></File>
+    <File action="delete"   wait="2" Name="INSTALL_FOLDER\ASP\Website\*"></File>
+    <File action="delete"   wait="2" Name="INSTALL_FOLDER\ASP\Admin\*"></File>
+    <File action="delete"   wait="2" Name="INSTALL_FOLDER\ASP\Common\*"></File>
+    <File action="delete"   wait="2" Name="INSTALL_FOLDER\ASP\Web\*"></File-->
+  </Deploy>
+  <Deploy type="file">
+    <!--File action="copy"   wait="5" From="DEPLOY_FOLDER\web\Website" To="INSTALL_FOLDER\ASP\Website"></File>
+    <File action="copy"   wait="2" From="DEPLOY_FOLDER\web\Admin" To="INSTALL_FOLDER\ASP\Admin"></File>
+    <File action="copy"   wait="2" From="DEPLOY_FOLDER\web\Common" To="INSTALL_FOLDER\ASP\Common"></File>
+    <File action="copy"   wait="2" From="DEPLOY_FOLDER\web\Web" To="INSTALL_FOLDER\ASP\Web"></File-->
+  </Deploy>
+  <!-- http:// RsAutoTest /ECM72H >
+  <Deploy type="file">
+    <File action="delete" wait="5" Name="INSTALL_FOLDERHome\ASP\Website\*"></File>
+    <File action="copy"   wait="5" From="DEPLOY_FOLDER\web\Website\*" To="INSTALL_FOLDERHome\ASP\Website"></File>    
+  </Deploy-->
+  <!--Deploy type="batchfile">
+    <BatchFile wait="30" FileName="DEPLOY_FOLDER\lib\RegisterCom.bat"></BatchFile>
+  </Deploy>
+  <Deploy type="queuebuild">
+	  <Build  wait="2" ProjectName="VS2012BuildTemplate" DefinitionName="ECM72_RsAutoTest_Test"></Build>
+  </Deploy-->
+</configuration>
