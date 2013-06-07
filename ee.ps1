@@ -1,3 +1,8 @@
+param(
+[string]$configFile = "site.config",
+[string]$applicationPoolIdentityPassword = "",
+[string]$dBServerPassword   = ""
+)
 $Policy = "Unrestricted"
 If ((get-ExecutionPolicy) -ne $Policy) {
   Set-ExecutionPolicy $Policy -Force
@@ -93,7 +98,7 @@ if ($runDBscripts -eq "true")
 }
 #>
 
-[xml]$c = Get-Content "site.config" 
+[xml]$c = Get-Content $configFile 
 $InstallFolder = "Package"
 
 #***********************************************************************
@@ -128,7 +133,7 @@ function Get-KeyValue([string]$path, [string]$key)
 {
     return (Get-ItemProperty $path).$key
 }
-function CheckPrerequisites()
+function checkPrerequisites()
 {
 	if (!(Test-Key "HKLM:\Software\Microsoft\InetStp" "PathWWWRoot"))
 	{
@@ -166,9 +171,30 @@ function copyDirectorys($installFolder, $coreSiteExists, $sitePath)
 		Copy-Item -path (Join-Path $installFolder ECMweb) -destination (Join-Path $sitePath ASP) -recurse -force 
 		Copy-Item -path (Join-Path $installFolder lib) -destination (Join-Path $sitePath lib) -recurse -force 
 
-		RegisterDll
+		registerDll $sitePath
 	}
 	Copy-Item -path (Join-Path (Join-Path $installFolder installer) Doxim.udl) -destination (Join-Path $sitePath ASP\Data\Doxim.udl) -recurse -force 
+}
+function registerDll($sitePath)
+{
+	#### comment RegisterCom.bat pause
+	$batchFilePath = Join-Path (Join-Path $sitePath lib) RegisterCom.bat
+	Set-ItemProperty $batchFilePath -name IsReadOnly -value $false	
+	$batchFileContent = Get-Content $batchFilePath
+	$batchFileContent = $batchFileContent -replace "pause", "REM pause"
+	Set-Content $batchFilePath $batchFileContent
+	
+	echo "#####      Run RegisterCom.bat"
+	cd (Join-Path $sitePath lib)
+	echo (Join-Path $sitePath lib)
+	Start-Process $batchFilePath -NoNewWindow -Wait
+	cd $scriptPath
+	
+	#### uncomment RegisterCom.bat pause
+	$batchFileContent = Get-Content $batchFilePath
+	$batchFileContent = $batchFileContent -replace "REM pause", "pause"
+	Set-Content $batchFilePath $batchFileContent
+	Set-ItemProperty $batchFilePath -name IsReadOnly -value $true	
 }
 function configIIS7($coreApplicationName, $siteName)
 {
@@ -195,13 +221,13 @@ function configIIS7($coreApplicationName, $siteName)
 	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $siteName + """ ""/section:httpErrors"" /+""[statusCode='500', subStatusCode='100', path='" + $errorPagePath + "', responseMode='ExecuteURL']"""
 	Invoke-Expression $appcmd
 }
-function createApplicationPool($applicationPoolName, $applicationPoolIdentityDomain, $applicationPoolIdentity, $applicationPoolIdentityPwd)
+function createApplicationPool($applicationPoolName, $applicationPoolIdentityDomain, $applicationPoolIdentity, $applicationPoolIdentityPassword)
 {
 	echo "#####      Create ApplicationPool"
 	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe add apppool /name:""" + $applicationPoolName + """ /managedRuntimeVersion:v4.0 /managedPipelineMode:Classic"
 	Invoke-Expression $appcmd
 	echo "#####      Set ApplicationPool Identity"
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config /section:applicationPools " + """/[name='" + $applicationPoolName + "'].processModel.identityType:SpecificUser"" " + """/[name='" + $applicationPoolName + "'].processModel.userName:" + (Join-Path $applicationPoolIdentityDomain $applicationPoolIdentity) + """ " + """/[name='" + $applicationPoolName + "'].processModel.password:" + $applicationPoolIdentityPwd + """"
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config /section:applicationPools " + """/[name='" + $applicationPoolName + "'].processModel.identityType:SpecificUser"" " + """/[name='" + $applicationPoolName + "'].processModel.userName:" + (Join-Path $applicationPoolIdentityDomain $applicationPoolIdentity) + """ " + """/[name='" + $applicationPoolName + "'].processModel.password:" + $applicationPoolIdentityPassword + """"
 	Invoke-Expression $appcmd
 	echo "#####      Enable 32-Bit Applications"
 	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set apppool /apppool.name:""" + $applicationPoolName + """ ""/enable32BitAppOnWin64:true"""
@@ -216,78 +242,56 @@ function createApplication($siteName, $sitePath, $applicationName, $applicationP
 	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set app /app.name:""" + $siteName + "/" + $applicationName + """ /applicationPool:""" + $applicationPoolName + """"
 	Invoke-Expression $appcmd
 }
-function CreateVirualDirectory()
+function createVirualDirectory($coreAdminParentPath, $siteName, $applicationName)
 {
 	echo "#####      Create Virtual Directory Admin, Web, Common"
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe add vdir /app.name:""" + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ /path:/Admin /physicalPath:""" + (Join-Path $coreAdminParentPath "Admin") + """"
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe add vdir /app.name:""" + $siteName + "/" + $applicationName + """ /path:/Admin /physicalPath:""" + (Join-Path $coreAdminParentPath "Admin") + """"
 	Invoke-Expression $appcmd
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe add vdir /app.name:""" + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ /path:/Web /physicalPath:""" + (Join-Path $coreAdminParentPath "Web") + """"
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe add vdir /app.name:""" + $siteName + "/" + $applicationName + """ /path:/Web /physicalPath:""" + (Join-Path $coreAdminParentPath "Web") + """"
 	Invoke-Expression $appcmd
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe add vdir /app.name:""" + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ /path:/Common /physicalPath:""" + (Join-Path $coreAdminParentPath "Common") + """"
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe add vdir /app.name:""" + $siteName + "/" + $applicationName + """ /path:/Common /physicalPath:""" + (Join-Path $coreAdminParentPath "Common") + """"
 	Invoke-Expression $appcmd
 }
-function ConfigApplication($applicationPoolIdentityPwd)
+function configApplication($siteName, $applicationName, $applicationPoolIdentityDomain, $applicationPoolIdentity, $applicationPoolIdentityPassword)
 {
 	echo "#####      Set site authentication"
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ ""/section:anonymousAuthentication"" ""/userName:" + (Join-Path $d.webSite.applicationPoolIdentityDomain $d.webSite.applicationPoolIdentity) + """ ""/password:" + $applicationPoolIdentityPwd + """ ""/commit:apphost"""
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $siteName + "/" + $applicationName + """ ""/section:anonymousAuthentication"" ""/userName:" + (Join-Path $applicationPoolIdentityDomain $applicationPoolIdentity) + """ ""/password:" + $applicationPoolIdentityPassword + """ ""/commit:apphost"""
 	Invoke-Expression $appcmd
 	echo "#####      Set site default page"
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set unlock config """ + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ ""/section:aspdefaultDocument"""
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set unlock config """ + $siteName + "/" + $applicationName + """ ""/section:aspdefaultDocument"""
 	Invoke-Expression $appcmd
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ ""/section:defaultDocument"" ""/+files.[value='default.htm']"""
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $siteName + "/" + $applicationName + """ ""/section:defaultDocument"" ""/+files.[value='default.htm']"""
 	Invoke-Expression $appcmd
 	echo "#####      Send Errors to browser"
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ /section:system.webServer/asp /scriptErrorSentToBrowser:""True"""
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $siteName + "/" + $applicationName + """ /section:system.webServer/asp /scriptErrorSentToBrowser:""True"""
 	Invoke-Expression $appcmd
 	echo "#####      Set Request filtering"
-	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $d.webSite.siteName + "/" + $d.webSite.applicationName + """ /section:requestfiltering /requestlimits.maxallowedcontentlength:60000000"
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe set config """ + $siteName + "/" + $applicationName + """ /section:requestfiltering /requestlimits.maxallowedcontentlength:60000000"
 	Invoke-Expression $appcmd
 }
-function RegisterDll()
-{
-	#### comment RegisterCom.bat pause
-	$batchFilePath = Join-Path (Join-Path $d.webSite.path lib) RegisterCom.bat
-	Set-ItemProperty $batchFilePath -name IsReadOnly -value $false	
-	$batchFileContent = Get-Content $batchFilePath
-	$batchFileContent = $batchFileContent -replace "pause", "REM pause"
-	Set-Content $batchFilePath $batchFileContent
-	
-	echo "#####      Run RegisterCom.bat"
-	cd (Join-Path $d.webSite.path lib)
-	echo (Join-Path $d.webSite.path lib)
-	Start-Process $batchFilePath -NoNewWindow -Wait
-	cd $scriptPath
-	
-	#### uncomment RegisterCom.bat pause
-	$batchFileContent = Get-Content $batchFilePath
-	$batchFileContent = $batchFileContent -replace "REM pause", "pause"
-	Set-Content $batchFilePath $batchFileContent
-	Set-ItemProperty $batchFilePath -name IsReadOnly -value $true	
-}
-function UpdateConnectionString($password)
+function updateConnectionString($sitePath, $serverName, $dbName, $userId, $password)
 {
 	echo "#####      Modify Doxim.udl"
-	$dbFilePath = Join-Path $d.webSite.path ASP\Data\Doxim.udl
+	$dbFilePath = Join-Path $sitePath ASP\Data\Doxim.udl
 	Set-ItemProperty $dbFilePath -name IsReadOnly -value $false	
 	$dbFile = Get-Content $dbFilePath
-	$dbFile = $dbFile -replace "DBSRVR", $d.dBServer.serverName
-	$dbFile = $dbFile -replace "SQLDBNAME", $d.dBServer.dbName
-	$dbFile = $dbFile -replace "SQLUSERNAME", $d.dBServer.userId
+	$dbFile = $dbFile -replace "DBSRVR", $serverName
+	$dbFile = $dbFile -replace "SQLDBNAME", $dbName
+	$dbFile = $dbFile -replace "SQLUSERNAME", $userId
 	$dbFile = $dbFile -replace "SQLPASSWORD", $password
 	Set-Content $dbFilePath $dbFile -Encoding Unicode
 	Set-ItemProperty $dbFilePath -name IsReadOnly -value $true	
 }
-function CleanUp()
+function cleanUp($sitePath)
 {
 	#del web.config
-	$webConfigPath = Join-Path $d.webSite.path ASP\Website\web.config
+	$webConfigPath = Join-Path $sitePath ASP\Website\web.config
 	if (Test-Path $webConfigPath) 
 	{
 		Remove-Item $webConfigPath -recurse -force 
 	}
-	$slnPath = Join-Path $d.webSite.path "ASP\Web.sln"
 }
-function SetupFrenchLanguagePack()
+function setupFrenchLanguagePack($InstallFolder)
 {
 	$frenchPack = Get-WmiObject -Class Win32_Product | Where {$_.Name -match 'Microsoft .NET Framework 4 Extended FRA Language Pack' }
 	if ($frenchPack -eq $NULL) { 
@@ -297,90 +301,100 @@ function SetupFrenchLanguagePack()
 	} 
 }
 ##### Check Install Prerequisites	
-CheckPrerequisites
+checkPrerequisites
 
 $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes",""
 $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No",""
 $choices = [System.Management.Automation.Host.ChoiceDescription[]]($yes,$no)
 
-foreach ($d in $c.configuration.sites.site)
+$d = $c.configuration.site
+$coreSiteExists = [boolean]::Parse($d.coreSite.exists)
+$poolExists = Test-Path ("IIS:\AppPools\"+$d.webSite.applicationPool)
+$siteExists = Test-Path ("IIS:\Sites\"+$d.WebSite.siteName+"\"+$d.WebSite.applicationName)
+$reInstallPool = $false
+$reInstallSite = $false
+$silentMode = !($applicationPoolIdentityPassword -eq "" -OR $dBServerPassword -eq "") 
+#echo $d.webSite.siteName
+#echo ("IIS:\Sites\"+$d.webSite.siteName+"\"+$d.webSite.applicationName)
+
+if ($poolExists)
 {
-	switch ($d.type)
+	if ($silentMode)
 	{
-		"application" 
-		{
-			$coreSiteExists = [boolean]::Parse($d.coreSite.exists)
-			$poolExists = Test-Path ("IIS:\AppPools\"+$d.webSite.applicationPool)
-			$siteExists = Test-Path ("IIS:\Sites\"+$d.WebSite.siteName+"\"+$d.WebSite.applicationName)
-			$reInstallPool = $false
-			$reInstallSite = $false
-			#echo $d.webSite.siteName
-			#echo ("IIS:\Sites\"+$d.webSite.siteName+"\"+$d.webSite.applicationName)
-			
-			if ($poolExists)
-			{
-				$caption = "Warning! applicationPool: "+$d.webSite.applicationPool+" already exists!!"
-				$message = "Do you want to remove this applicationPool and reinstall a new one? "
-				$result = $Host.UI.PromptForChoice($caption,$message,$choices,1)
-				if($result -eq 0) { $reInstallPool = $true } else { $reInstallPool = $false } 
-			}
-			if ($siteExists)
-			{
-				$caption = "Warning! WebSite: "+$d.webSite.siteName+"\"+$d.webSite.applicationName+ " already exists!!"
-				$message = "Do you want to remove this site and reinstall a new one? "
-				$result = $Host.UI.PromptForChoice($caption,$message,$choices,1)
-				if($result -eq 0) { $reInstallSite = $true } else { $reInstallSite = $false }
-			}
-			
-			if ($siteExists -and $reInstallSite)
-			{
-				echo "#####      Remove Old Application"
-				$appcmd = "$env:windir\system32\inetsrv\appcmd.exe delete app """ + $d.webSite.siteName + "/" + $d.webSite.applicationName +""""
-				Invoke-Expression $appcmd
-				if (Test-Path $d.webSite.path) 
-				{ 
-					Remove-Item $d.webSite.path -recurse -force 
-				}
-				
-				if ($poolExists -and $reInstallPool)
-				{
-					echo "#####      Remove Old ApplicationPool"
-					$appcmd = "$env:windir\system32\inetsrv\appcmd.exe delete apppool " + $d.webSite.applicationPool
-					Invoke-Expression $appcmd
-				}
-			}
-			
-			if (!$siteExists -or $reInstallSite)
-			{
-				$domainUserId = Join-Path $d.webSite.applicationPoolIdentityDomain $d.webSite.applicationPoolIdentity
-				echo ""
-				echo "===================================================================="
-				$pass = Read-Host 'What is domain user:'$domainUserId'''s password?' -AsSecureString
-				$applicationPoolIdentityPwd = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
-				echo ""
-				echo "===================================================================="
-				$pass = Read-Host 'What is database user:'$d.dBServer.userId'''s password?' -AsSecureString
-				$dBServerPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
-				$coreApplicationName = $d.coreSite.applicationName 
-				$coreAdminParentPath = if ($coreSiteExists) {$d.coreSite.adminParentPath } else {Join-Path $d.webSite.path "Asp"}
-
-				copyDirectorys $InstallFolder $coreSiteExists $d.webSite.path
-				configIIS7 $coreApplicationName, $d.webSite.siteName
-				createApplicationPool $d.webSite.applicationPool $d.webSite.applicationPoolIdentityDomain $d.webSite.applicationPoolIdentity $applicationPoolIdentityPwd
-				createApplication $d.webSite.siteName $d.webSite.path $d.webSite.applicationName $d.webSite.applicationPool
-
-				CreateVirualDirectory
-				ConfigApplication $applicationPoolIdentityPwd
-				UpdateConnectionString $dBServerPassword
-				CleanUp
-	
-				Write-Host "Doxim ECM Site: "$d.webSite.siteName"/"$d.webSite.applicationName" Complete Installed" -ForegroundColor "Green"
-			}
-			else
-			{
-				Write-Host "Found Previous Doxim ECM Site: "$d.webSite.siteName"/"$d.webSite.applicationName -ForegroundColor "Yellow"
-			}
-		}
+		$reInstallPool = $true
 	}
+	else
+	{
+		$caption = "Warning! applicationPool: "+$d.webSite.applicationPool+" already exists!!"
+		$message = "Do you want to remove this applicationPool and reinstall a new one? "
+		$result = $Host.UI.PromptForChoice($caption,$message,$choices,1)
+		if($result -eq 0) { $reInstallPool = $true } else { $reInstallPool = $false } 
+	}
+}
+if ($siteExists)
+{
+	if ($silentMode)
+	{
+		$reInstallSite = $true
+	}
+	else
+	{
+		$caption = "Warning! WebSite: "+$d.webSite.siteName+"\"+$d.webSite.applicationName+ " already exists!!"
+		$message = "Do you want to remove this site and reinstall a new one? "
+		$result = $Host.UI.PromptForChoice($caption,$message,$choices,1)
+		if($result -eq 0) { $reInstallSite = $true } else { $reInstallSite = $false }
+	}
+}
+
+if ($siteExists -and $reInstallSite)
+{
+	echo "#####      Remove Old Application"
+	$appcmd = "$env:windir\system32\inetsrv\appcmd.exe delete app """ + $d.webSite.siteName + "/" + $d.webSite.applicationName +""""
+	Invoke-Expression $appcmd
+	if (Test-Path $d.webSite.path) 
+	{ 
+		Remove-Item $d.webSite.path -recurse -force 
+	}
+	
+	if ($poolExists -and $reInstallPool)
+	{
+		echo "#####      Remove Old ApplicationPool"
+		$appcmd = "$env:windir\system32\inetsrv\appcmd.exe delete apppool " + $d.webSite.applicationPool
+		Invoke-Expression $appcmd
+	}
+}
+
+if (!$siteExists -or $reInstallSite)
+{
+	if (!$silentMode)
+	{
+		$domainUserId = Join-Path $d.webSite.applicationPoolIdentityDomain $d.webSite.applicationPoolIdentity
+		echo ""
+		echo "===================================================================="
+		$pass = Read-Host 'What is domain user:'$domainUserId'''s password?' -AsSecureString
+		$applicationPoolIdentityPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
+		echo ""
+		echo "===================================================================="
+		$pass = Read-Host 'What is database user:'$d.dBServer.userId'''s password?' -AsSecureString
+		$dBServerPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pass))
+	}
+	$coreApplicationName = $d.coreSite.applicationName 
+	$coreAdminParentPath = if ($coreSiteExists) {$d.coreSite.adminParentPath } else {Join-Path $d.webSite.path "Asp"}
+	
+	copyDirectorys $InstallFolder $coreSiteExists $d.webSite.path
+	configIIS7 $coreApplicationName, $d.webSite.siteName
+	createApplicationPool $d.webSite.applicationPool $d.webSite.applicationPoolIdentityDomain $d.webSite.applicationPoolIdentity $applicationPoolIdentityPassword
+	createApplication $d.webSite.siteName $d.webSite.path $d.webSite.applicationName $d.webSite.applicationPool
+	createVirualDirectory $coreAdminParentPath $d.webSite.siteName $d.webSite.applicationName
+	configApplication $d.webSite.siteName $d.webSite.applicationPool $d.webSite.applicationPoolIdentityDomain $d.webSite.applicationPoolIdentity $applicationPoolIdentityPassword
+	updateConnectionString $d.webSite.path $d.dBServer.serverName $d.dBServer.dbName $d.dBServer.userId $dBServerPassword
+	cleanUp $d.webSite.path 
+	
+
+	Write-Host "Doxim ECM Site: "$d.webSite.siteName"/"$d.webSite.applicationName" Complete Installed" -ForegroundColor "Green"
+}
+else
+{
+	Write-Host "Found Previous Doxim ECM Site: "$d.webSite.siteName"/"$d.webSite.applicationName -ForegroundColor "Yellow"
 }
 
