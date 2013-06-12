@@ -1,0 +1,99 @@
+
+D:\Jack\installer\powerShell\Website2\lib>IISRESET
+
+Attempting stop...
+Internet services successfully stopped
+Attempting start...
+Internet services successfully restarted
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /u DoximImage.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types un-registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /u DoximActionCfg.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types un-registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /u Doximlib.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types un-registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /u Ionic.Zip.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types un-registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regsvcs /u DoximAspContext.dll 
+Microsoft (R) .NET Framework Services Installation Utility Version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Uninstallation of assembly 'D:\Jack\installer\powerShell\Website2\lib\DoximAspContext.dll' succeeded.
+
+D:\Jack\installer\powerShell\Website2\lib>Regsvr32 /u /s ASPForm.dll 
+
+D:\Jack\installer\powerShell\Website2\lib>Regsvr32 /u /s ScptUtl.dll 
+
+D:\Jack\installer\powerShell\Website2\lib>Regsvr32 /u /s zLib.dll 
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /codebase /tlb Doximlib.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types registered successfully
+Assembly exported to 'D:\Jack\installer\powerShell\Website2\lib\Doximlib.tlb', and the type library was registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /codebase /tlb DoximActionCfg.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types registered successfully
+Assembly exported to 'D:\Jack\installer\powerShell\Website2\lib\DoximActionCfg.tlb', and the type library was registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /codebase /tlb DoximImage.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types registered successfully
+Assembly exported to 'D:\Jack\installer\powerShell\Website2\lib\DoximImage.tlb', and the type library was registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regasm /codebase /tlb Ionic.Zip.dll 
+Microsoft .NET Framework Assembly Registration Utility version 4.0.30319.17929
+for Microsoft .NET Framework version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+Types registered successfully
+Assembly exported to 'D:\Jack\installer\powerShell\Website2\lib\Ionic.Zip.tlb', and the type library was registered successfully
+
+D:\Jack\installer\powerShell\Website2\lib>C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\regsvcs  DoximAspContext.dll 
+Microsoft (R) .NET Framework Services Installation Utility Version 4.0.30319.17929
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+WARNING: The assembly does not declare an ApplicationAccessControl Attribute.  Application security will be enabled by default.
+Installed Assembly:
+	Assembly: D:\Jack\installer\powerShell\Website2\lib\DoximAspContext.dll
+	Application: DoximAspContext
+	TypeLib: D:\Jack\installer\powerShell\Website2\lib\DoximAspContext.tlb
+
+D:\Jack\installer\powerShell\Website2\lib>Regsvr32 /s FDFACX.DLL 
+
+D:\Jack\installer\powerShell\Website2\lib>Regsvr32 /s ASPForm.dll 
+
+D:\Jack\installer\powerShell\Website2\lib>Regsvr32 /s ScptUtl.dll 
+
+D:\Jack\installer\powerShell\Website2\lib>Regsvr32 /s zLib.dll 
+
+D:\Jack\installer\powerShell\Website2\lib>REM pause 

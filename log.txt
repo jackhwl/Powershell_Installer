@@ -1,0 +1,52 @@
+Start at: Wednesday, June 12, 2013 3:42:34 PM
+####  checkPrerequisites
+Install Site: Default Web Site\Doxim25 (CoreSite:True) in Silent Mode
+Remove existing site: Default Web Site\Doxim25
+
+APP object "Default Web Site/Doxim25" deleted
+Remove existing application pool: DoximEDoc25
+APPPOOL object "DoximEDoc25" deleted
+####  Copy site directorys
+Copy Website and Lib
+Run RegisterCom.bat
+Copy Website DB config file
+####  Config IIS7
+Allow Asp.net 4.0
+Applied configuration changes to section "system.webServer/security/isapiCgiRestriction" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Applied configuration changes to section "system.webServer/security/isapiCgiRestriction" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Enable parent path
+Applied configuration changes to section "system.webServer/asp" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Remove Custom error page
+Applied configuration changes to section "system.webServer/httpErrors" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Applied configuration changes to section "system.webServer/httpErrors" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Add Custom error page
+Applied configuration changes to section "system.webServer/httpErrors" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Applied configuration changes to section "system.webServer/httpErrors" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+####  Create ApplicationPool
+APPPOOL object "DoximEDoc25" added
+Set ApplicationPool Identity
+Applied configuration changes to section "system.applicationHost/applicationPools" for "MACHINE/WEBROOT/APPHOST" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Enable 32-Bit Applications
+APPPOOL object "DoximEDoc25" changed
+####  Create Application under site
+APP object "Default Web Site/Doxim25" added VDIR object "Default Web Site/Doxim25" added
+Set Application's application pool
+APP object "Default Web Site/Doxim25" changed
+####  Create Virtual Directory Admin, Web, Common
+VDIR object "Default Web Site/Doxim25/Admin" added
+VDIR object "Default Web Site/Doxim25/Web" added
+VDIR object "Default Web Site/Doxim25/Common" added
+####  Config Application
+Set site authentication
+Applied configuration changes to section "system.webServer/security/authentication/anonymousAuthentication" for "MACHINE/WEBROOT/APPHOST/Default Web Site/Doxim25" at configuration commit path "MACHINE/WEBROOT/APPHOST"
+Set site default page
+Failed to process input: The parameter 'Default Web Site/Doxim25' must begin with a / or - (HRESULT=80070057). 
+Applied configuration changes to section "system.webServer/defaultDocument" for "MACHINE/WEBROOT/APPHOST/Default Web Site/Doxim25" at configuration commit path "MACHINE/WEBROOT/APPHOST/Default Web Site/Doxim25"
+Send Errors to browser
+Applied configuration changes to section "system.webServer/asp" for "MACHINE/WEBROOT/APPHOST/Default Web Site/Doxim25" at configuration commit path "MACHINE/WEBROOT/APPHOST/Default Web Site/Doxim25"
+Set Request filtering
+Applied configuration changes to section "system.webServer/security/requestFiltering" for "MACHINE/WEBROOT/APPHOST/Default Web Site/Doxim25" at configuration commit path "MACHINE/WEBROOT/APPHOST/Default Web Site/Doxim25"
+####  Modify Doxim.udl
+del web.config
+Doxim ECM Site: Default Web Site/Doxim25 Complete Installed
+End at: Wednesday, June 12, 2013 3:42:51 PM
