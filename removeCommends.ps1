@@ -1,8 +1,11 @@
-#.\removeComment.ps1 "c:\publish\ab.config" "(?ms)^\s*<!--\s*[\r\n]*\s*\*\*\*\*\*[\s\S\n]*?-->[\r\n]*"
+#.\removeComment.ps1 -FilePath "c:\publish\ab.config" 
 
-$webConfigFilePath=$args[0]
-$pattern=$args[1]
+param
+(
+	$FilePath = "C:\\publish\\Web.config",
+	$Pattern = "(?ms)^\s*<!--\s*[\r\n]*\s*\*\*\*\*\*[\s\S\n]*?-->[\r\n]*"
+)
 [IO.Directory]::SetCurrentDirectory((Convert-Path (Get-Location -PSProvider FileSystem)))
-$filetxt = [IO.File]::ReadAllText($webConfigFilePath)
-$filetxt = ($filetxt -replace $pattern, "")
-Set-Content -Path $webConfigFilePath -Value $filetxt
+$filetxt = [IO.File]::ReadAllText($FilePath)
+$filetxt = ($filetxt -replace $Pattern, "")
+Set-Content -Path $FilePath -Value $filetxt
